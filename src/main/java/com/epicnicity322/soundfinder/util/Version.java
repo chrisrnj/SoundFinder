@@ -23,7 +23,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.regex.Pattern;
 
 public record Version(@NotNull String version) implements Comparable<Version> {
-    private static final @NotNull Pattern validVersion = Pattern.compile("^\\d+(\\.\\d+)+$");
+    public static final @NotNull Pattern validVersion = Pattern.compile("^\\d+(\\.\\d+)+$");
     private static final @NotNull Pattern versionSeparator = Pattern.compile("\\.");
 
     public Version(@NotNull String version) {

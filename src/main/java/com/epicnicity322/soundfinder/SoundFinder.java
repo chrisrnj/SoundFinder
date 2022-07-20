@@ -29,8 +29,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Scanner;
 
-public class SoundFinder {
+public final class SoundFinder {
     static final @NotNull Path SOUNDS_FOLDER;
+    static final @NotNull String SOUNDS_FOLDER_NAME;
     private static final @NotNull Version MAX_SOUNDS_VERSION = new Version("1.19");
     private static final @NotNull Version MIN_SOUNDS_VERSION = new Version("1.7");
     private static final @NotNull String[] soundResources = new String[]{"sounds 1.7.json", "sounds 1.8.json",
@@ -44,9 +45,13 @@ public class SoundFinder {
             // Asserting creation of folder and getting it on the right path,
             // since this location might be already used by a regular file.
             SOUNDS_FOLDER = PathUtils.getDirectory(Path.of("./sounds"));
-        } catch (IOException e) {
+            SOUNDS_FOLDER_NAME = SOUNDS_FOLDER.getFileName().toString();
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private SoundFinder() {
     }
 
     public static void main(String[] args) throws IOException {
@@ -64,7 +69,7 @@ public class SoundFinder {
         System.out.println("\nWelcome to Sound Finder!" +
                 "\n" +
                 "\nUsing all sounds from " + MIN_SOUNDS_VERSION + " to " + MAX_SOUNDS_VERSION + "." +
-                "\nIf you'd like to use sounds from another version, add a new sounds json into the folder '" + SOUNDS_FOLDER.getFileName().toString() + "'.");
+                "\nIf you'd like to use sounds from another version, add a new sounds json into the folder '" + SOUNDS_FOLDER_NAME + "'.");
 
         prompt(new Scanner(System.in));
     }

@@ -20,17 +20,22 @@ package com.epicnicity322.soundfinder;
 
 import com.epicnicity322.epicpluginlib.core.util.PathUtils;
 import com.epicnicity322.soundfinder.util.Back;
+import com.epicnicity322.soundfinder.util.Version;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
+import java.util.TreeMap;
 
-public class Commands {
+public final class Commands {
     private static final @NotNull Back back = new Back();
     public static boolean delayMessages = true;
     private static boolean firstBaseAsking = true;
     private static double delayMultiplier = 1.0;
+    private Commands() {
+    }
 
     public static void exit(@NotNull String[] command) {
         if (command.length <= 1 || !command[1].equalsIgnoreCase("!delete")) {
@@ -38,7 +43,7 @@ public class Commands {
             try {
                 PathUtils.deleteAll(SoundFinder.SOUNDS_FOLDER);
             } catch (Throwable t) { // Must exit the program even if it fails deletion.
-                System.out.println("Unable to delete '" + SoundFinder.SOUNDS_FOLDER.getFileName().toString() + "' folder:");
+                System.out.println("Unable to delete '" + SoundFinder.SOUNDS_FOLDER_NAME + "' folder:");
                 t.printStackTrace();
                 System.exit(1);
             }
@@ -83,22 +88,34 @@ public class Commands {
     }
 
     public static void start(@NotNull Scanner input) throws Back {
-        List<String> availableVersions = getAvailableVersions();
+        final TreeMap<String, TreeMap<String, ArrayList<String>>> availableVersions;
+
+        System.out.println("Reading jsons in '" + SoundFinder.SOUNDS_FOLDER_NAME + "' folder...");
+        try {
+            availableVersions = SoundFinderManager.getAvailableVersions();
+        } catch (IOException e) {
+            System.out.println("Something went wrong while getting available sound versions.");
+            e.printStackTrace();
+            throw back;
+        }
+        System.out.print("\n");
 
         if (availableVersions.isEmpty()) {
-            System.out.println("It looks like there are no sound files in " + SoundFinder.SOUNDS_FOLDER.getFileName().toString() + " folder.");
+            System.out.println("It looks like there are no sound files in " + SoundFinder.SOUNDS_FOLDER_NAME + " folder.");
             System.out.println("Please add sound files or restart the program to extract the default sounds.");
             tryAndSleep(5000);
             throw back;
         }
         // If there is only one version, using it as base and asking to remove denominator.
         else if (availableVersions.size() == 1) {
-            allSet(input, availableVersions.get(0), availableVersions, removeVersionDenominator(input, availableVersions));
-            throw back;
+            for (Map.Entry<String, TreeMap<String, ArrayList<String>>> version : availableVersions.entrySet()) {
+                allSet(input, new Base(version.getKey(), version.getValue()), availableVersions, removeVersionDenominator(input, availableVersions));
+                throw back;
+            }
         }
 
         // Asking for the base.
-        String base = base(input, availableVersions);
+        Base base = base(input, availableVersions);
         // Asking if any versions should be excluded from the constructor.
         exclude(input, availableVersions);
         // All set, asking for confirmation and creating enum.
@@ -107,35 +124,35 @@ public class Commands {
         throw back;
     }
 
-    private static @NotNull List<String> getAvailableVersions() {
-        var list = new ArrayList<String>();
-        list.add("1.8");
-        return list;
-    }
-
-    private static @NotNull String base(@NotNull Scanner input, @NotNull List<String> availableVersions) throws Back {
+    private static @NotNull Base base(@NotNull Scanner input, @NotNull TreeMap<String, TreeMap<String, ArrayList<String>>> availableVersions) throws Back {
         System.out.println("Please input the version you would like to use as base for the enum" +
                 (firstBaseAsking ? ", that is the version that will be used to create the names of the enums, and to" +
                         " compare to sound files of other versions." : "."));
         System.out.println("Type 'back' to go back to command prompt.");
-        System.out.println("Available sound versions: " + availableVersions);
+        System.out.println("Available sound versions: " + availableVersions.keySet());
         System.out.print("> ");
         firstBaseAsking = false;
 
-        String base = input.nextLine();
+        String baseVersion = input.nextLine();
 
-        checkThrowBack(base);
+        checkThrowBack(baseVersion);
 
-        if (!availableVersions.contains(base)) {
-            System.out.println("\nUnknown version '" + base + "'\n");
+        if (!Version.validVersion.matcher(baseVersion).matches()) {
+            System.out.println("\nUnknown version '" + baseVersion + "'\n");
+            tryAndSleep(1000);
+            return base(input, availableVersions);
+        }
+        TreeMap<String, ArrayList<String>> soundNames = availableVersions.get(baseVersion);
+        if (soundNames == null) {
+            System.out.println("\nUnknown version '" + baseVersion + "'\n");
             tryAndSleep(1000);
             return base(input, availableVersions);
         }
 
-        return base;
+        return new Base(baseVersion, soundNames);
     }
 
-    private static void exclude(@NotNull Scanner input, @NotNull List<String> availableVersions) throws Back {
+    private static void exclude(@NotNull Scanner input, @NotNull TreeMap<String, TreeMap<String, ArrayList<String>>> availableVersions) throws Back {
         if (availableVersions.size() == 1) {
             System.out.println("\nLooks like there is only one version left. Using it.\n");
             tryAndSleep(2000);
@@ -143,7 +160,7 @@ public class Commands {
         }
         System.out.println("\nType in the versions you would not like to have its sounds in the enum. One at a time, please.");
         System.out.println("Type 'done' when you're done, or 'back' to go back to prompt.");
-        System.out.println("Current sound versions: " + availableVersions);
+        System.out.println("Current sound versions: " + availableVersions.keySet());
         System.out.print("> ");
 
         String excluding = input.nextLine();
@@ -152,7 +169,7 @@ public class Commands {
 
         if (excluding.equalsIgnoreCase("done") || excluding.equalsIgnoreCase("ready")) {
             return;
-        } else if (!availableVersions.remove(excluding)) {
+        } else if ((!Version.validVersion.matcher(excluding).matches()) || availableVersions.remove(excluding) == null) {
             System.out.println("\nUnknown version '" + excluding + "'");
             tryAndSleep(1000);
         }
@@ -160,9 +177,9 @@ public class Commands {
         exclude(input, availableVersions);
     }
 
-    private static boolean removeVersionDenominator(@NotNull Scanner input, @NotNull List<String> availableVersions) throws Back {
+    private static boolean removeVersionDenominator(@NotNull Scanner input, @NotNull TreeMap<String, TreeMap<String, ArrayList<String>>> availableVersions) throws Back {
         if (availableVersions.size() == 1) {
-            System.out.println("Only one version was detected: " + availableVersions.get(0));
+            System.out.println("Only one version was detected: " + availableVersions.keySet().iterator().next());
             System.out.println("Since you're creating an enum with only one version of sounds, would you like to remove the version denominator of the string at the enum constructor?");
             System.out.print("Y/N > ");
 
@@ -182,19 +199,19 @@ public class Commands {
         return false;
     }
 
-    private static void allSet(@NotNull Scanner input, @NotNull String base, @NotNull List<String> versions, boolean noDenominator) throws Back {
-        System.out.println("\n\nWe are all set! Please confirm the options:");
-        tryAndSleep(2500 * delayMultiplier);
-        System.out.println("\n- Base for enum names: " + base);
-        tryAndSleep(800 * delayMultiplier);
-        System.out.println("- Versions to add sound names to constructor: " + versions);
+    private static void allSet(@NotNull Scanner input, @NotNull Base base, @NotNull TreeMap<String, TreeMap<String, ArrayList<String>>> versions, boolean noDenominator) throws Back {
+        System.out.println("\nWe are all set! Please confirm the options:");
+        tryAndSleep(500 * delayMultiplier);
+        System.out.println("\n- Base for enum names: " + base.version());
+        tryAndSleep(500 * delayMultiplier);
+        System.out.println("- Versions to add sound names to constructor: " + versions.keySet());
 
         if (versions.size() == 1) {
-            tryAndSleep(800 * delayMultiplier);
+            tryAndSleep(500 * delayMultiplier);
             System.out.println("- Remove version denominator from sound names in enum constructor: " + (noDenominator ? "yes" : "no"));
         }
 
-        tryAndSleep(10000 * delayMultiplier);
+        tryAndSleep(5000 * delayMultiplier);
         System.out.println("\nType 'confirm' to confirm the options, or 'cancel' to discard and go back to command prompt.");
         System.out.print("> ");
 
@@ -202,10 +219,16 @@ public class Commands {
 
         checkThrowBack(confirmation);
         if (confirmation.equalsIgnoreCase("confirm") || confirmation.equalsIgnoreCase("ok") || confirmation.equalsIgnoreCase("proceed") || confirmation.equalsIgnoreCase("check") || confirmation.equalsIgnoreCase("yes") || confirmation.equalsIgnoreCase("okay")) {
-            System.out.println("\nPLEASE WAIT WHILE SOUNDS ARE WRITTEN TO 'output.txt'...");
-            tryAndSleep(4000);
-            System.err.println("FAILED! THIS PROGRAM IS NOT FINISHED AND THIS FUNCTIONALITY IS NOT AVAILABLE YET.");
-            tryAndSleep(6000);
+            System.out.println("\nPrinting sound enum to 'output.txt'...");
+            try {
+                SoundFinderManager.printOutput(base, versions, !noDenominator);
+            } catch (IOException e) {
+                System.out.println("Unable to print 'output.txt':");
+                e.printStackTrace();
+                throw back;
+            }
+            System.out.println("\nAll done! Type 'exit' to exit the program.");
+            tryAndSleep(2000);
             throw back;
         } else {
             System.out.println("\nI couldn't catch that, I'm going to ask again.");
