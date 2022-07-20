@@ -98,7 +98,7 @@
         <dependency>
             <groupId>com.github.Epicnicity322</groupId>
             <artifactId>EpicPluginLib</artifactId>
-            <version>-SNAPSHOT</version>
+            <version>5009c4ce14</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
