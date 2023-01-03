@@ -53,7 +53,7 @@ public final class SoundFinderManager {
                 // Firstly, do a check of matching names.
                 for (var sound2 : sound2EntrySet) {
                     if (sound.getKey().equals(sound2.getKey())) {
-                        soundVersionName.computeIfAbsent(sound.getKey(), s -> new TreeMap<>(versionStringComparator))
+                        soundVersionName.computeIfAbsent(sound.getKey().toUpperCase().replace('.', '_'), s -> new TreeMap<>(versionStringComparator))
                                 .put(version.getKey(), sound2.getKey());
                         checkAgain = false;
                         break;
@@ -64,7 +64,7 @@ public final class SoundFinderManager {
                 if (checkAgain) {
                     for (var sound2 : sound2EntrySet) {
                         if (!sound.getValue().isEmpty() && !sound2.getValue().isEmpty() && sound.getValue().containsAll(sound2.getValue())) {
-                            soundVersionName.computeIfAbsent(sound.getKey(), s -> new TreeMap<>(versionStringComparator))
+                            soundVersionName.computeIfAbsent(sound.getKey().toUpperCase().replace('.', '_'), s -> new TreeMap<>(versionStringComparator))
                                     .put(version.getKey(), sound2.getKey());
                             break;
                         }
@@ -88,7 +88,7 @@ public final class SoundFinderManager {
                 builder.append("),\n");
             }
 
-            builder.append(soundEntry.getKey().toUpperCase().replace('.', '_')).append("(");
+            builder.append(soundEntry.getKey()).append("(");
 
             if (denominator) {
                 String previousSound = "";
