@@ -32,12 +32,19 @@ import java.util.Scanner;
 public final class SoundFinder {
     static final @NotNull Path SOUNDS_FOLDER;
     static final @NotNull String SOUNDS_FOLDER_NAME;
-    private static final @NotNull Version MAX_SOUNDS_VERSION = new Version("1.19");
+    private static final @NotNull Version MAX_SOUNDS_VERSION = new Version("1.21.11");
     private static final @NotNull Version MIN_SOUNDS_VERSION = new Version("1.7");
-    private static final @NotNull String[] soundResources = new String[]{"sounds 1.7.json", "sounds 1.8.json",
-            "sounds 1.9.json", "sounds 1.10.json", "sounds 1.11.json", "sounds 1.12.json", "sounds 1.13.json",
-            "sounds 1.14.json", "sounds 1.15.json", "sounds 1.16.json", "sounds 1.17.json", "sounds 1.18.json",
-            "sounds 1.19.json"};
+    private static final @NotNull String[] soundResources = new String[]{"sounds 1.7.json", "sounds 1.7.10.json",
+            "sounds 1.8.json", "sounds 1.8.9.json", "sounds 1.9.json", "sounds 1.9.4.json", "sounds 1.10.json",
+            "sounds 1.10.2.json", "sounds 1.11.json", "sounds 1.11.2.json", "sounds 1.12.json", "sounds 1.12.2.json",
+            "sounds 1.13.json", "sounds 1.13.2.json", "sounds 1.14.json", "sounds 1.14.4.json", "sounds 1.15.json",
+            "sounds 1.15.2.json", "sounds 1.16.json", "sounds 1.16.5.json", "sounds 1.17.json", "sounds 1.17.1.json",
+            "sounds 1.18.json", "sounds 1.18.2.json", "sounds 1.19.json", "sounds 1.19.2.json", "sounds 1.19.3.json",
+            "sounds 1.19.4.json", "sounds 1.20.json", "sounds 1.20.1.json", "sounds 1.20.2.json", "sounds 1.20.3.json",
+            "sounds 1.20.4.json", "sounds 1.20.5.json", "sounds 1.20.6.json", "sounds 1.21.json", "sounds 1.21.1.json",
+            "sounds 1.21.2.json", "sounds 1.21.3.json", "sounds 1.21.4.json", "sounds 1.21.5.json",
+            "sounds 1.21.6.json", "sounds 1.21.8.json", "sounds 1.21.9.json", "sounds 1.21.10.json",
+            "sounds 1.21.11.json"};
     private static boolean firstPrompt = true;
 
     static {
@@ -66,10 +73,7 @@ public final class SoundFinder {
             throw new IOException("Could not extract sounds", e);
         }
 
-        System.out.println("\nWelcome to Sound Finder!" +
-                "\n" +
-                "\nUsing all sounds from " + MIN_SOUNDS_VERSION + " to " + MAX_SOUNDS_VERSION + "." +
-                "\nIf you'd like to use sounds from another version, add a new sounds json into the folder '" + SOUNDS_FOLDER_NAME + "'.");
+        System.out.println("\nWelcome to Sound Finder!" + "\n" + "\nUsing all sounds from " + MIN_SOUNDS_VERSION + " to " + MAX_SOUNDS_VERSION + "." + "\nIf you'd like to use sounds from another version, add a new sounds json into the folder '" + SOUNDS_FOLDER_NAME + "'.");
 
         prompt(new Scanner(System.in));
     }
